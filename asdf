@@ -1,42 +1,2218 @@
-​<light>// UserDashboard.jsx: React{{1}} 라이브러리를 활용한 컴포넌트{{2}} 구현 예시​</light>
-import React, { useState, useEffect } from 'react';
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataLens - 데이터 분석 도구</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: #e0e7ff;
+            --secondary: #0ea5e9;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --surface-alt: #f1f5f9;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.06);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --transition: 0.2s ease;
+        }
 
-const UserDashboard = () => {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  useEffect(() => {
-    // 외부 API와의 비동기 처리{{3}}를 시뮬레이션하여 데이터를 가져옵니다.
-    const fetchData = async () => {
-      try {
-        const response = await new Promise((resolve) => 
-          setTimeout(() => resolve([
-            { id: 1, name: 'Liner AI Search' },
-            { id: 2, name: 'Smart Assistant' }
-          ]), 800)
-        );
-        setData(response);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
 
-  if (loading) return <div>데이터를 불러오는 중입니다...</div>;
+        /* Header */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
 
-  return (
-    <div style=padding: '20px'{{4}}>
-      <h1>데이터 시각화{{5}} 대시보드</h1>
-      <ul style=lineHeight: '2'{{6}}>
-        {data.map(item => (
-          <li key={item.id}>
-            <strong>{item.id}</strong>: {item.name}
-          </li>
-        ))}
-      </ul>
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+        }
+
+        .logo svg { width: 32px; height: 32px; }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Layout */
+        .app-container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Onboarding / Guide */
+        .onboarding {
+            background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%);
+            color: white;
+            border-radius: var(--radius);
+            padding: 40px 48px;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .onboarding::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.06);
+        }
+
+        .onboarding h1 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .onboarding p {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 24px;
+            max-width: 600px;
+        }
+
+        .steps-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .step-card {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            flex: 1;
+            min-width: 180px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .step-num {
+            background: white;
+            color: var(--primary);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .step-card .step-text { font-size: 14px; font-weight: 500; }
+
+        .close-onboarding {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .close-onboarding:hover { background: rgba(255,255,255,0.3); }
+
+        /* Upload Area */
+        .upload-section {
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 48px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--surface-alt);
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .drop-zone svg {
+            width: 48px;
+            height: 48px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .drop-zone.dragover svg { color: var(--primary); }
+
+        .drop-zone h3 {
+            font-size: 16px;
+            margin-bottom: 4px;
+            color: var(--text);
+        }
+
+        .drop-zone p {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .drop-zone .browse-btn {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 8px 20px;
+            background: var(--primary);
+            color: white;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .drop-zone .browse-btn:hover { background: var(--primary-hover); }
+
+        input[type="file"] { display: none; }
+
+        /* Dataset Tabs */
+        .dataset-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .dataset-tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-secondary);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dataset-tab:hover { border-color: var(--primary); color: var(--primary); }
+
+        .dataset-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .dataset-tab .remove-ds {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            background: rgba(0,0,0,0.1);
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .dataset-tab.active .remove-ds { background: rgba(255,255,255,0.3); }
+
+        /* Toolbar */
+        .toolbar {
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px 24px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .toolbar select, .toolbar input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 13px;
+            background: var(--surface);
+            color: var(--text);
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .toolbar select:focus, .toolbar input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+        }
+
+        .toolbar-sep {
+            width: 1px;
+            height: 28px;
+            background: var(--border);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 8px 18px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-secondary { background: var(--surface-alt); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: var(--border); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #059669; }
+        .btn-warning { background: var(--warning); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Main Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .main-grid.full { grid-template-columns: 1fr; }
+
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-header h3 {
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-body { padding: 20px; }
+
+        /* Data Table */
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 420px;
+            overflow-y: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table th {
+            background: var(--surface-alt);
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .data-table th:hover { color: var(--primary); }
+
+        .data-table th .sort-icon { font-size: 10px; margin-left: 4px; }
+
+        .data-table td {
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .data-table tr:hover td { background: var(--primary-light); }
+
+        .data-table .row-num {
+            color: var(--text-secondary);
+            font-size: 11px;
+            text-align: center;
+            width: 40px;
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .stat-item {
+            background: var(--surface-alt);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+        }
+
+        .stat-item .stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-item .stat-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-top: 2px;
+        }
+
+        .stat-item .stat-sub {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        /* Column Analysis */
+        .col-analysis-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .col-item {
+            background: var(--surface-alt);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+        }
+
+        .col-item-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .col-name {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .col-type {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .col-type.numeric { background: #dbeafe; color: #1d4ed8; }
+        .col-type.text { background: #fce7f3; color: #be185d; }
+        .col-type.date { background: #d1fae5; color: #047857; }
+
+        .col-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        .col-stat { color: var(--text-secondary); }
+        .col-stat span { font-weight: 700; color: var(--text); }
+
+        /* Chart */
+        .chart-container {
+            width: 100%;
+            position: relative;
+        }
+
+        .chart-canvas-wrap {
+            width: 100%;
+            height: 380px;
+            position: relative;
+        }
+
+        .chart-canvas-wrap canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Analysis Panels */
+        .analysis-section {
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        /* Correlation Matrix */
+        .corr-matrix {
+            overflow-x: auto;
+        }
+
+        .corr-table {
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .corr-table th, .corr-table td {
+            padding: 8px 12px;
+            text-align: center;
+            white-space: nowrap;
+            border: 1px solid var(--border);
+            min-width: 70px;
+        }
+
+        .corr-table th {
+            background: var(--surface-alt);
+            font-weight: 700;
+            font-size: 11px;
+        }
+
+        /* Distribution */
+        .dist-chart-area {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        .dist-chart-item {
+            background: var(--surface-alt);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+        }
+
+        .dist-chart-item h4 {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        /* Pivot Table */
+        .pivot-config {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: end;
+            margin-bottom: 16px;
+        }
+
+        .pivot-config .field-group { display: flex; flex-direction: column; gap: 4px; }
+        .pivot-config label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+        .pivot-config select {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .toast {
+            background: var(--text);
+            color: white;
+            padding: 12px 20px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: var(--shadow-lg);
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+        .toast.warning { background: var(--warning); }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Tabs */
+        .analysis-tabs {
+            display: flex;
+            gap: 4px;
+            padding: 8px;
+            background: var(--surface-alt);
+            border-radius: var(--radius-sm);
+            margin-bottom: 20px;
+        }
+
+        .analysis-tab {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            transition: var(--transition);
+        }
+
+        .analysis-tab:hover { color: var(--text); }
+
+        .analysis-tab.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: var(--shadow);
+        }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* Filter Row */
+        .filter-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 12px 16px;
+            background: var(--surface-alt);
+            border-radius: var(--radius-sm);
+            margin-bottom: 12px;
+        }
+
+        .filter-row select, .filter-row input {
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .filter-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .filter-badge button {
+            background: none;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0;
+            line-height: 1;
+        }
+
+        /* Regression */
+        .regression-result {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .regression-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .reg-stat {
+            background: var(--surface-alt);
+            border-radius: 6px;
+            padding: 10px 12px;
+        }
+
+        .reg-stat .label { font-size: 11px; color: var(--text-secondary); font-weight: 600; }
+        .reg-stat .value { font-size: 18px; font-weight: 800; color: var(--primary); }
+
+        /* Outliers */
+        .outlier-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .outlier-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13px;
+        }
+
+        .outlier-item:last-child { border-bottom: none; }
+
+        .outlier-value {
+            font-weight: 700;
+            color: var(--danger);
+        }
+
+        /* Export */
+        .export-options {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .main-grid { grid-template-columns: 1fr; }
+            .regression-result { grid-template-columns: 1fr; }
+            .onboarding { padding: 24px; }
+            .steps-row { flex-direction: column; }
+        }
+
+        @media (max-width: 600px) {
+            .app-container { padding: 12px; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .header { padding: 0 12px; }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+        /* Loading */
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 40px auto;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .hidden { display: none !important; }
+
+        /* Sample Data Button */
+        .sample-btn {
+            margin-top: 12px;
+            padding: 6px 14px;
+            border: 1px dashed var(--text-secondary);
+            background: transparent;
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .sample-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 12px 0;
+        }
+
+        .pagination button {
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .pagination button:hover { border-color: var(--primary); color: var(--primary); }
+        .pagination button.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .pagination .page-info { font-size: 12px; color: var(--text-secondary); margin: 0 8px; }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+    <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="7.5 4.21 12 6.81 16.5 4.21"/><polyline points="7.5 19.79 7.5 14.6 3 12"/><polyline points="21 12 16.5 14.6 16.5 19.79"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        DataLens
     </div>
-  );
+    <div class="header-actions">
+        <button class="btn btn-secondary" onclick="exportCSV()" id="exportBtn" disabled>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            CSV 내보내기
+        </button>
+        <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            파일 추가
+        </button>
+    </div>
+</header>
+
+<div class="app-container">
+
+    <!-- Onboarding -->
+    <div class="onboarding" id="onboarding">
+        <button class="close-onboarding" onclick="document.getElementById('onboarding').classList.add('hidden')">&times;</button>
+        <h1>데이터를 쉽고 빠르게 분석하세요</h1>
+        <p>CSV 파일을 업로드하면 자동으로 데이터를 파싱하고, 기술 통계, 상관분석, 회귀분석, 이상치 탐지, 피벗 테이블 등 다양한 분석을 즉시 수행합니다.</p>
+        <div class="steps-row">
+            <div class="step-card">
+                <div class="step-num">1</div>
+                <div class="step-text">CSV 파일을 드래그하거나 클릭하여 업로드</div>
+            </div>
+            <div class="step-card">
+                <div class="step-num">2</div>
+                <div class="step-text">자동으로 생성된 통계와 차트 확인</div>
+            </div>
+            <div class="step-card">
+                <div class="step-num">3</div>
+                <div class="step-text">탭을 전환해 다양한 분석 결과 탐색</div>
+            </div>
+            <div class="step-card">
+                <div class="step-num">4</div>
+                <div class="step-text">필터링, 정렬, 내보내기로 결과 활용</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload -->
+    <div class="upload-section" id="uploadSection">
+        <div class="section-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            데이터 업로드
+        </div>
+        <div class="drop-zone" id="dropZone">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+            <h3>CSV 파일을 여기에 드래그하세요</h3>
+            <p>또는 아래 버튼을 클릭하여 파일을 선택하세요 (다중 파일 지원)</p>
+            <div class="browse-btn">파일 선택</div>
+            <br>
+            <button class="sample-btn" onclick="loadSampleData(event)">샘플 데이터로 시작하기</button>
+        </div>
+        <input type="file" id="fileInput" accept=".csv,.tsv,.txt" multiple>
+    </div>
+
+    <!-- Dataset Tabs -->
+    <div class="dataset-tabs hidden" id="datasetTabs"></div>
+
+    <!-- Filter -->
+    <div class="card hidden" id="filterSection" style="margin-bottom:24px;">
+        <div class="card-header">
+            <h3>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                데이터 필터
+            </h3>
+            <button class="btn btn-secondary" onclick="clearAllFilters()" style="font-size:12px;padding:4px 10px;">전체 해제</button>
+        </div>
+        <div class="card-body">
+            <div class="filter-row">
+                <select id="filterCol"></select>
+                <select id="filterOp">
+                    <option value="eq">같음 (=)</option>
+                    <option value="neq">같지 않음 (≠)</option>
+                    <option value="gt">보다 큼 (&gt;)</option>
+                    <option value="gte">이상 (≥)</option>
+                    <option value="lt">보다 작음 (&lt;)</option>
+                    <option value="lte">이하 (≤)</option>
+                    <option value="contains">포함</option>
+                    <option value="startsWith">시작 문자</option>
+                </select>
+                <input type="text" id="filterVal" placeholder="값 입력...">
+                <button class="btn btn-primary" onclick="addFilter()" style="font-size:12px;padding:6px 12px;">필터 추가</button>
+            </div>
+            <div id="activeFilters" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;"></div>
+        </div>
+    </div>
+
+    <!-- Analysis Tabs -->
+    <div class="hidden" id="analysisArea">
+        <div class="analysis-tabs" id="analysisTabs">
+            <button class="analysis-tab active" data-tab="overview">📊 개요</button>
+            <button class="analysis-tab" data-tab="table">📋 데이터 테이블</button>
+            <button class="analysis-tab" data-tab="distribution">📈 분포 분석</button>
+            <button class="analysis-tab" data-tab="correlation">🔗 상관 분석</button>
+            <button class="analysis-tab" data-tab="regression">📐 회귀 분석</button>
+            <button class="analysis-tab" data-tab="outliers">🔍 이상치 탐지</button>
+            <button class="analysis-tab" data-tab="pivot">📑 피벗 테이블</button>
+            <button class="analysis-tab" data-tab="compare">⚖️ 데이터셋 비교</button>
+        </div>
+
+        <!-- Overview -->
+        <div class="tab-panel active" id="panel-overview">
+            <div class="main-grid">
+                <div class="card">
+                    <div class="card-header"><h3>📊 기본 통계</h3></div>
+                    <div class="card-body"><div class="stats-grid" id="statsGrid"></div></div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h3>📉 수치형 컬럼 요약 차트</h3>
+                        <select id="overviewChartType" onchange="drawOverviewChart()" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;">
+                            <option value="bar">막대 그래프</option>
+                            <option value="radar">레이더 차트</option>
+                        </select>
+                    </div>
+                    <div class="card-body"><div class="chart-canvas-wrap"><canvas id="overviewChart"></canvas></div></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>📝 컬럼별 상세 분석</h3></div>
+                <div class="card-body"><div class="col-analysis-list" id="colAnalysisList"></div></div>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="tab-panel" id="panel-table">
+            <div class="card">
+                <div class="card-header">
+                    <h3>📋 데이터 테이블</h3>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <input type="text" id="tableSearch" placeholder="검색..." style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;outline:none;" oninput="renderTable()">
+                        <span id="rowCount" style="font-size:12px;color:var(--text-secondary);"></span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-wrapper" id="tableWrapper"></div>
+                    <div class="pagination" id="pagination"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Distribution -->
+        <div class="tab-panel" id="panel-distribution">
+            <div class="card">
+                <div class="card-header"><h3>📈 분포 분석</h3>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <label style="font-size:12px;">Bins:</label>
+                        <input type="number" id="binCount" value="15" min="3" max="100" style="width:60px;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;" onchange="drawDistributions()">
+                    </div>
+                </div>
+                <div class="card-body"><div class="dist-chart-area" id="distChartArea"></div></div>
+            </div>
+        </div>
+
+        <!-- Correlation -->
+        <div class="tab-panel" id="panel-correlation">
+            <div class="main-grid">
+                <div class="card">
+                    <div class="card-header"><h3>🔗 상관계수 행렬</h3></div>
+                    <div class="card-body"><div class="corr-matrix" id="corrMatrix"></div></div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h3>🌡️ 히트맵</h3></div>
+                    <div class="card-body"><div class="chart-canvas-wrap"><canvas id="corrHeatmap"></canvas></div></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>📊 산점도</h3>
+                    <div style="display:flex;gap:8px;">
+                        <select id="scatterX" onchange="drawScatter()" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;"></select>
+                        <span style="font-size:12px;color:var(--text-secondary);align-self:center;">vs</span>
+                        <select id="scatterY" onchange="drawScatter()" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;"></select>
+                    </div>
+                </div>
+                <div class="card-body"><div class="chart-canvas-wrap"><canvas id="scatterChart"></canvas></div></div>
+            </div>
+        </div>
+
+        <!-- Regression -->
+        <div class="tab-panel" id="panel-regression">
+            <div class="card">
+                <div class="card-header"><h3>📐 선형 회귀 분석</h3></div>
+                <div class="card-body">
+                    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;align-items:end;">
+                        <div class="field-group">
+                            <label style="font-size:12px;font-weight:600;color:var(--text-secondary);">독립변수 (X)</label>
+                            <select id="regX" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;"></select>
+                        </div>
+                        <div class="field-group">
+                            <label style="font-size:12px;font-weight:600;color:var(--text-secondary);">종속변수 (Y)</label>
+                            <select id="regY" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;"></select>
+                        </div>
+                        <button class="btn btn-primary" onclick="runRegression()">분석 실행</button>
+                    </div>
+                    <div class="regression-result" id="regressionResult" style="display:none;">
+                        <div>
+                            <h4 style="font-size:14px;font-weight:700;margin-bottom:12px;">회귀 통계</h4>
+                            <div class="regression-stats" id="regStats"></div>
+                            <div style="margin-top:12px;padding:12px;background:var(--surface-alt);border-radius:6px;font-size:13px;" id="regEquation"></div>
+                        </div>
+                        <div>
+                            <h4 style="font-size:14px;font-weight:700;margin-bottom:12px;">회귀선 차트</h4>
+                            <div class="chart-canvas-wrap"><canvas id="regChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Outliers -->
+        <div class="tab-panel" id="panel-outliers">
+            <div class="card">
+                <div class="card-header"><h3>🔍 이상치 탐지 (IQR 방식)</h3>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <label style="font-size:12px;">IQR 배수:</label>
+                        <input type="number" id="iqrMultiplier" value="1.5" step="0.1" min="0.5" max="5" style="width:60px;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;">
+                        <button class="btn btn-primary" onclick="detectOutliers()" style="font-size:12px;padding:6px 12px;">탐지 실행</button>
+                    </div>
+                </div>
+                <div class="card-body" id="outlierResults"></div>
+            </div>
+        </div>
+
+        <!-- Pivot Table -->
+        <div class="tab-panel" id="panel-pivot">
+            <div class="card">
+                <div class="card-header"><h3>📑 피벗 테이블</h3></div>
+                <div class="card-body">
+                    <div class="pivot-config">
+                        <div class="field-group">
+                            <label>행 (Row)</label>
+                            <select id="pivotRow"></select>
+                        </div>
+                        <div class="field-group">
+                            <label>값 (Value)</label>
+                            <select id="pivotValue"></select>
+                        </div>
+                        <div class="field-group">
+                            <label>집계 함수</label>
+                            <select id="pivotAgg">
+                                <option value="sum">합계</option>
+                                <option value="mean">평균</option>
+                                <option value="count">개수</option>
+                                <option value="min">최소</option>
+                                <option value="max">최대</option>
+                                <option value="median">중앙값</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="generatePivot()">생성</button>
+                    </div>
+                    <div id="pivotResult"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compare -->
+        <div class="tab-panel" id="panel-compare">
+            <div class="card">
+                <div class="card-header"><h3>⚖️ 데이터셋 비교</h3></div>
+                <div class="card-body">
+                    <div id="compareContent">
+                        <p style="color:var(--text-secondary);font-size:14px;">2개 이상의 데이터셋을 업로드하면 비교 분석이 가능합니다.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+<script>
+// ======================== STATE ========================
+const state = {
+    datasets: [],
+    activeIndex: -1,
+    filters: [],
+    sortCol: null,
+    sortDir: 'asc',
+    tablePage: 0,
+    pageSize: 50,
+    charts: {}
 };
 
-export default UserDashboard;
+// ======================== UTILS ========================
+function toast(msg, type = 'success') {
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = 'toast ' + type;
+    t.textContent = msg;
+    c.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; t.style.transition = '0.3s'; setTimeout(() => t.remove(), 300); }, 3000);
+}
+
+function fmt(n, d = 2) {
+    if (n === null || n === undefined || isNaN(n)) return 'N/A';
+    if (Number.isInteger(n) && Math.abs(n) < 1e15) return n.toLocaleString();
+    return parseFloat(n.toFixed(d)).toLocaleString(undefined, { maximumFractionDigits: d });
+}
+
+function isNumeric(v) {
+    if (v === null || v === undefined || v === '') return false;
+    return !isNaN(Number(v));
+}
+
+function inferType(values) {
+    let numCount = 0, dateCount = 0, total = 0;
+    for (const v of values) {
+        if (v === null || v === undefined || v === '') continue;
+        total++;
+        if (isNumeric(v)) numCount++;
+        else if (!isNaN(Date.parse(v)) && v.length > 4) dateCount++;
+    }
+    if (total === 0) return 'text';
+    if (numCount / total > 0.8) return 'numeric';
+    if (dateCount / total > 0.8) return 'date';
+    return 'text';
+}
+
+function getNumericValues(data, col) {
+    return data.map(r => parseFloat(r[col])).filter(v => !isNaN(v));
+}
+
+function mean(arr) { return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0; }
+
+function median(arr) {
+    if (!arr.length) return 0;
+    const s = [...arr].sort((a, b) => a - b);
+    const m = Math.floor(s.length / 2);
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
+function stddev(arr) {
+    const m = mean(arr);
+    return Math.sqrt(arr.reduce((s, v) => s + (v - m) ** 2, 0) / arr.length);
+}
+
+function q1(arr) {
+    const s = [...arr].sort((a, b) => a - b);
+    return median(s.slice(0, Math.floor(s.length / 2)));
+}
+
+function q3(arr) {
+    const s = [...arr].sort((a, b) => a - b);
+    return median(s.slice(Math.ceil(s.length / 2)));
+}
+
+function skewness(arr) {
+    const m = mean(arr), sd = stddev(arr), n = arr.length;
+    if (sd === 0 || n < 3) return 0;
+    return (n / ((n - 1 * n - 2)) * rr.reduce((s, v) => s + ((v - m) / sd) ** 3, 0);
+}
+
+function kurtosis(arr) {
+    const m = mean(arr), sd = stddev(arr), n = arr.length;
+    if (sd === 0 || n < 4) return 0;
+    const k4 = arr.reduce((s, v) => s + ((v - m) / sd) ** 4, 0) / n;
+    return k4 - 3;
+}
+
+function pearsonCorr(x, y) {
+    const n = Math.min(x.length, y.length);
+    if (n < 2) return 0;
+    const mx = mean(x.slice(0, n)), my = mean(y.slice(0, n));
+    let num = 0, dx = 0, dy = 0;
+    for (let i = 0; i < n; i++) {
+        const a = x[i] - mx, b = y[i] - my;
+        num +=  * ; dx +=  * ; dy +=  * ;
+    }
+    const denom = Math.sqrt(d * y);
+    return denom === 0 ? 0 : num / denom;
+}
+
+// ======================== CSV PARSER ========================
+function parseCSV(text) {
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) throw new Error('데이터가 충분하지 않습니다.');
+
+    let delimiter = ',';
+    const firstLine = lines[0];
+    const tabCount = (firstLine.match(/\t/g) || []).length;
+    const commaCount = (firstLine.match(/,/g) || []).length;
+    const semiCount = (firstLine.match(/;/g) || []).length;
+    if (tabCount > commaCount && tabCount > semiCount) delimiter = '\t';
+    else if (semiCount > commaCount) delimiter = ';';
+
+    function parseLine(line) {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (inQuotes) {
+                if (ch === '"') {
+                    if (i + 1 < line.length && line[i + 1] === '"') { current += '"'; i++; }
+                    else inQuotes = false;
+                } else current += ch;
+            } else {
+                if (ch === '"') inQuotes = true;
+                else if (ch === delimiter) { result.push(current.trim()); current = ''; }
+                else current += ch;
+            }
+        }
+        result.push(current.trim());
+        return result;
+    }
+
+    const headers = parseLine(lines[0]);
+    const data = [];
+    for (let i = 1; i < lines.length; i++) {
+        const vals = parseLine(lines[i]);
+        if (vals.length === headers.length) {
+            const row = {};
+            headers.forEach((h, j) => row[h] = vals[j]);
+            data.push(row);
+        }
+    }
+
+    if (data.length === 0) throw new Error('유효한 행이 없습니다.');
+
+    const colTypes = {};
+    headers.forEach(h => {
+        const vals = data.map(r => r[h]);
+        colTypes[h] = inferType(vals);
+        if (colTypes[h] === 'numeric') {
+            data.forEach(r => {
+                const v = parseFloat(r[h]);
+                r[h] = isNaN(v) ? null : v;
+            });
+        }
+    });
+
+    return { headers, data, colTypes };
+}
+
+// ======================== FILE HANDLING ========================
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('click', (e) => {
+    if (e.target.classList.contains('sample-btn')) return;
+    fileInput.click();
+});
+
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    handleFiles(e.dataTransfer.files);
+});
+
+fileInput.addEventListener('change', () => { handleFiles(fileInput.files); fileInput.value = ''; });
+
+function handleFiles(files) {
+    Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const parsed = parseCSV(e.target.result);
+                state.datasets.push({ name: file.name.replace(/\.[^.]+\\(/, ''), ...parsed });
+                state.activeIndex = state.datasets.length - 1;
+                state.filters = [];
+                state.sortCol = null;
+                state.tablePage = 0;
+                toast(`"\\){file.name}" 업로드 완료 (\\({parsed.data.length}행)`);
+                refreshAll();
+            } catch (err) {
+                toast('파일 파싱 실패: ' + err.message, 'error');
+            }
+        };
+        reader.readAsText(file);
+    });
+}
+
+function loadSampleData(e) {
+    if (e) e.stopPropagation();
+    const headers = ['이름', '나이', '부서', '급여', '경력(년)', '성과점수', '만족도', '입사년도'];
+    const departments = ['영업', '개발', '마케팅', '인사', '기획', '디자인'];
+    const names = ['김민수','이지은','박서준','최유리','정대현','강하늘','윤세아','한도윤','송미래','오준호',
+                   '임채영','배성훈','류다은','장원영','홍석현','문가영','신동엽','고윤정','남주혁','서예진',
+                   '조인성','전소민','안효섭','노정의','권나라','유연석','김태리','이도현','박보검','한소희',
+                   '차은우','손예진','정해인','김고은','이준기','수지','공유','전지현','송강','김수현',
+                   '이성경','박형식','한지민','남궁민','김지원','옥택연','문채원','여진구','박민영','이민호'];
+    const data = [];
+    for (let i = 0; i < 50; i++) {
+        const age = 23 + Math.floor(Math.random( * 7);
+        const exp = Math.max(0, age - 22 - Math.floor(Math.random( * ));
+        const baseSalary = 3000 + ex * 50 + Math.floor(Math.random( * 000);
+        data.push({
+            '이름': names[i],
+            '나이': age,
+            '부서': departments[Math.floor(Math.random( * epartments.length)],
+            '급여': baseSalary,
+            '경력(년)': exp,
+            '성과점수': Math.round((60 + Math.random( * 0 * 0) / 10,
+            '만족도': Math.round((1 + Math.random( *  * 0) / 10,
+            '입사년도': 2026 - exp
+        });
+    }
+    const colTypes = { '이름': 'text', '나이': 'numeric', '부서': 'text', '급여': 'numeric', '경력(년)': 'numeric', '성과점수': 'numeric', '만족도': 'numeric', '입사년도': 'numeric' };
+    state.datasets.push({ name: '샘플_직원데이터', headers, data, colTypes });
+    state.activeIndex = state.datasets.length - 1;
+    state.filters = [];
+    state.sortCol = null;
+    state.tablePage = 0;
+    toast('샘플 데이터가 로드되었습니다!');
+    refreshAll();
+}
+
+// ======================== ACTIVE DATA ========================
+function getActiveDataset() {
+    return state.datasets[state.activeIndex] || null;
+}
+
+function getFilteredData() {
+    const ds = getActiveDataset();
+    if (!ds) return [];
+    let data = [...ds.data];
+    for (const f of state.filters) {
+        data = data.filter(row => {
+            const v = row[f.col];
+            const fv = f.val;
+            const numV = parseFloat(v);
+            const numFV = parseFloat(fv);
+            switch (f.op) {
+                case 'eq': return String(v) === fv;
+                case 'neq': return String(v) !== fv;
+                case 'gt': return !isNaN(numV) && !isNaN(numFV) && numV > numFV;
+                case 'gte': return !isNaN(numV) && !isNaN(numFV) && numV >= numFV;
+                case 'lt': return !isNaN(numV) && !isNaN(numFV) && numV < numFV;
+                case 'lte': return !isNaN(numV) && !isNaN(numFV) && numV <= numFV;
+                case 'contains': return String(v).toLowerCase().includes(fv.toLowerCase());
+                case 'startsWith': return String(v).toLowerCase().startsWith(fv.toLowerCase());
+                default: return true;
+            }
+        });
+    }
+    if (state.sortCol) {
+        const col = state.sortCol;
+        const dir = state.sortDir === 'asc' ? 1 : -1;
+        data.sort((a, b) => {
+            const va = a[col], vb = b[col];
+            if (va === null || va === undefined) return 1;
+            if (vb === null || vb === undefined) return -1;
+            if (typeof va === 'number' && typeof vb === 'number') return (va - vb * ir;
+            return String(va).localeCompare(String(vb) * ir;
+        });
+    }
+    return data;
+}
+
+function getNumericCols() {
+    const ds = getActiveDataset();
+    if (!ds) return [];
+    return ds.headers.filter(h => ds.colTypes[h] === 'numeric');
+}
+
+function getAllCols() {
+    const ds = getActiveDataset();
+    return ds ? ds.headers : [];
+}
+
+// ======================== FILTER ========================
+function addFilter() {
+    const col = document.getElementById('filterCol').value;
+    const op = document.getElementById('filterOp').value;
+    const val = document.getElementById('filterVal').value.trim();
+    if (!col || !val) { toast('컬럼과 값을 입력하세요.', 'warning'); return; }
+    state.filters.push({ col, op, val });
+    document.getElementById('filterVal').value = '';
+    state.tablePage = 0;
+    renderFilters();
+    refreshAnalysis();
+}
+
+function removeFilter(idx) {
+    state.filters.splice(idx, 1);
+    state.tablePage = 0;
+    renderFilters();
+    refreshAnalysis();
+}
+
+function clearAllFilters() {
+    state.filters = [];
+    state.tablePage = 0;
+    renderFilters();
+    refreshAnalysis();
+}
+
+const opLabels = { eq: '=', neq: '≠', gt: '>', gte: '≥', lt: '<', lte: '≤', contains: '포함', startsWith: '시작' };
+
+function renderFilters() {
+    const c = document.getElementById('activeFilters');
+    c.innerHTML = state.filters.map((f, i) =>
+        `<div class="filter-badge">\\){f.col} <inlineMath>{opLabels[f.op]} "</inlineMath>{f.val}" <button onclick="removeFilter(\\({i})">&times;</button></div>`
+    ).join('');
+}
+
+// ======================== DATASET TABS ========================
+function renderDatasetTabs() {
+    const c = document.getElementById('datasetTabs');
+    if (state.datasets.length === 0) { c.classList.add('hidden'); return; }
+    c.classList.remove('hidden');
+    c.innerHTML = state.datasets.map((ds, i) =>
+        `<div class="dataset-tab \\){i === state.activeIndex ? 'active' : ''}" onclick="switchDataset(\\({i})">
+            \\){ds.name}
+            <button class="remove-ds" onclick="event.stopPropagation();removeDataset(\\({i})">&times;</button>
+        </div>`
+    ).join('');
+}
+
+function switchDataset(idx) {
+    state.activeIndex = idx;
+    state.filters = [];
+    state.sortCol = null;
+    state.tablePage = 0;
+    renderFilters();
+    refreshAll();
+}
+
+function removeDataset(idx) {
+    state.datasets.splice(idx, 1);
+    if (state.datasets.length === 0) {
+        state.activeIndex = -1;
+        hideAnalysis();
+    } else {
+        state.activeIndex = Math.min(idx, state.datasets.length - 1);
+        state.filters = [];
+        state.sortCol = null;
+        state.tablePage = 0;
+    }
+    refreshAll();
+}
+
+function hideAnalysis() {
+    document.getElementById('analysisArea').classList.add('hidden');
+    document.getElementById('filterSection').classList.add('hidden');
+    document.getElementById('datasetTabs').classList.add('hidden');
+    document.getElementById('uploadSection').classList.remove('hidden');
+    document.getElementById('exportBtn').disabled = true;
+}
+
+// ======================== REFRESH ========================
+function refreshAll() {
+    renderDatasetTabs();
+    if (state.datasets.length === 0) { hideAnalysis(); return; }
+    document.getElementById('analysisArea').classList.remove('hidden');
+    document.getElementById('filterSection').classList.remove('hidden');
+    document.getElementById('uploadSection').classList.add('hidden');
+    document.getElementById('exportBtn').disabled = false;
+
+    const ds = getActiveDataset();
+    // Populate filter col
+    const fc = document.getElementById('filterCol');
+    fc.innerHTML = ds.headers.map(h => `<option value="\\){h}">\\({h}</option>`).join('');
+
+    // Populate scatter / regression selects
+    const numCols = getNumericCols();
+    ['scatterX', 'scatterY', 'regX', 'regY'].forEach(id => {
+        const el = document.getElementById(id);
+        const prev = el.value;
+        el.innerHTML = numCols.map(h => `<option value="\\){h}">\\({h}</option>`).join('');
+        if (numCols.includes(prev)) el.value = prev;
+    });
+    if (numCols.length >= 2) {
+        document.getElementById('scatterY').value = numCols[1];
+        document.getElementById('regY').value = numCols[1];
+    }
+
+    // Pivot selects
+    const pr = document.getElementById('pivotRow');
+    pr.innerHTML = ds.headers.map(h => `<option value="\\){h}">\\({h}</option>`).join('');
+    const pv = document.getElementById('pivotValue');
+    pv.innerHTML = numCols.map(h => `<option value="\\){h}">\\({h}</option>`).join('');
+
+    refreshAnalysis();
+}
+
+function refreshAnalysis() {
+    renderOverview();
+    renderTable();
+    drawDistributions();
+    renderCorrelation();
+    drawScatter();
+    detectOutliers();
+    renderCompare();
+}
+
+// ======================== OVERVIEW ========================
+function renderOverview() {
+    const ds = getActiveDataset();
+    const data = getFilteredData();
+    const numCols = getNumericCols();
+    const grid = document.getElementById('statsGrid');
+
+    const totalCells = data.lengt * s.headers.length;
+    let missingCount = 0;
+    data.forEach(r => ds.headers.forEach(h => { if (r[h] === null || r[h] === undefined || r[h] === '') missingCount++; }));
+    const missingPct = totalCells > 0 ? ((missingCount / totalCells * 00).toFixed(1) : 0;
+
+    grid.innerHTML = `
+        <div class="stat-item"><div class="stat-label">총 행 수</div><div class="stat-value">\\){data.length.toLocaleString()}</div><div class="stat-sub">필터 적용 기준</div></div>
+        <div class="stat-item"><div class="stat-label">총 열 수</div><div class="stat-value">\\({ds.headers.length}</div><div class="stat-sub">수치형 \\){numCols.length}개</div></div>
+        <div class="stat-item"><div class="stat-label">결측치</div><div class="stat-value"><inlineMath>{missingCount.toLocaleString()}</div><div class="stat-sub"></inlineMath>{missingPct}%</div></div>
+        <div class="stat-item"><div class="stat-label">수치형 열</div><div class="stat-value">\\({numCols.length}</div></div>
+        <div class="stat-item"><div class="stat-label">텍스트 열</div><div class="stat-value">\\){ds.headers.filter(h => ds.colTypes[h] === 'text').length}</div></div>
+    `;
+
+    // Column analysis
+    const list = document.getElementById('colAnalysisList');
+    list.innerHTML = ds.headers.map(h => {
+        const type = ds.colTypes[h];
+        if (type === 'numeric') {
+            const vals = getNumericValues(data, h);
+            if (vals.length === 0) return `<div class="col-item"><div class="col-item-header"><span class="col-name">\\({h}</span><span class="col-type numeric">수치</span></div><div style="font-size:12px;color:var(--text-secondary);">유효한 데이터 없음</div></div>`;
+            const mn = Math.min(...vals), mx = Math.max(...vals);
+            return `<div class="col-item">
+                <div class="col-item-header"><span class="col-name">\\){h}</span><span class="col-type numeric">수치</span></div>
+                <div class="col-stats">
+                    <div class="col-stat">평균 <span>\\({fmt(mean(vals))}</span></div>
+                    <div class="col-stat">중앙값 <span>\\){fmt(median(vals))}</span></div>
+                    <div class="col-stat">표준편차 <span>\\({fmt(stddev(vals))}</span></div>
+                    <div class="col-stat">최소 <span>\\){fmt(mn)}</span></div>
+                    <div class="col-stat">최대 <span>\\({fmt(mx)}</span></div>
+                    <div class="col-stat">범위 <span>\\){fmt(mx - mn)}</span></div>
+                    <div class="col-stat">왜도 <span>\\({fmt(skewness(vals), 3)}</span></div>
+                    <div class="col-stat">첨도 <span>\\){fmt(kurtosis(vals), 3)}</span></div>
+                </div></div>`;
+        } else {
+            const valCounts = {};
+            data.forEach(r => { const v = r[h] || '(빈 값)'; valCounts[v] = (valCounts[v] || 0) + 1; });
+            const unique = Object.keys(valCounts).length;
+            const sorted = Object.entries(valCounts).sort((a, b) => b[1] - a[1]);
+            const top3 = sorted.slice(0, 3).map(([k, v]) => `<inlineMath>{k}(</inlineMath>{v})`).join(', ');
+            return `<div class="col-item">
+                <div class="col-item-header"><span class="col-name">\\({h}</span><span class="col-type text">\\){type === 'date' ? '날짜' : '텍스트'}</span></div>
+                <div class="col-stats">
+                    <div class="col-stat">고유값 <span>\\({unique}</span></div>
+                    <div class="col-stat">최빈값 <span>\\){sorted[0] ? sorted[0][0] : 'N/A'}</span></div>
+                    <div class="col-stat" style="grid-column:span 2;">상위 3개 <span>\\({top3}</span></div>
+                </div></div>`;
+        }
+    }).join('');
+
+    drawOverviewChart();
+}
+
+function drawOverviewChart() {
+    const data = getFilteredData();
+    const numCols = getNumericCols();
+    if (numCols.length === 0) return;
+
+    const chartType = document.getElementById('overviewChartType').value;
+    const means = numCols.map(h => mean(getNumericValues(data, h)));
+    const maxVal = Math.max(...means.map(Math.abs)) || 1;
+    const normalized = means.map(v => v / maxVa * 00);
+
+    destroyChart('overviewChart');
+
+    if (chartType === 'radar') {
+        state.charts['overviewChart'] = new Chart(document.getElementById('overviewChart'), {
+            type: 'radar',
+            data: {
+                labels: numCols,
+                datasets: [{ label: '정규화 평균', data: normalized, backgroundColor: 'rgba(79,70,229,0.15)', borderColor: '#4f46e5', pointBackgroundColor: '#4f46e5', borderWidth: 2 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { r: { beginAtZero: true } } }
+        });
+    } else {
+        const colors = numCols.map((_, i) => `hsl(\\){( * 60 / numCols.length)}, 65%, 55%)`);
+        state.charts['overviewChart'] = new Chart(document.getElementById('overviewChart'), {
+            type: 'bar',
+            data: {
+                labels: numCols,
+                datasets: [{ label: '평균', data: means, backgroundColor: colors.map(c => c.replace(')', ', 0.7)').replace('hsl', 'hsla')), borderColor: colors, borderWidth: 2, borderRadius: 6 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+    }
+}
+
+// ======================== TABLE ========================
+function renderTable() {
+    const ds = getActiveDataset();
+    if (!ds) return;
+    const data = getFilteredData();
+    const searchVal = (document.getElementById('tableSearch').value || '').toLowerCase();
+
+    let filtered = data;
+    if (searchVal) {
+        filtered = data.filter(r => ds.headers.some(h => String(r[h] || '').toLowerCase().includes(searchVal)));
+    }
+
+    document.getElementById('rowCount').textContent = `\\({filtered.length.toLocaleString()}행`;
+
+    const totalPages = Math.ceil(filtered.length / state.pageSize) || 1;
+    if (state.tablePage >= totalPages) state.tablePage = totalPages - 1;
+    const start = state.tablePag * tate.pageSize;
+    const pageData = filtered.slice(start, start + state.pageSize);
+
+    const sortIcon = (col) => {
+        if (state.sortCol !== col) return '<span class="sort-icon">⇅</span>';
+        return state.sortDir === 'asc' ? '<span class="sort-icon">▲</span>' : '<span class="sort-icon">▼</span>';
+    };
+
+    let html = '<table class="data-table"><thead><tr><th class="row-num">#</th>';
+    ds.headers.forEach(h => { html += `<th onclick="sortTable('\\){h.replace(/'/g, "\\'")}')">\\({h} \\){sortIcon(h)}</th>`; });
+    html += '</tr></thead><tbody>';
+    pageData.forEach((row, i) => {
+        html += `<tr><td class="row-num">\\({start + i + 1}</td>`;
+        ds.headers.forEach(h => { html += `<td title="\\){row[h] !== null && row[h] !== undefined ? row[h] : ''}">\\({row[h] !== null && row[h] !== undefined ? row[h] : '<span style="color:#ccc;">N/A</span>'}</td>`; });
+        html += '</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('tableWrapper').innerHTML = html;
+
+    // Pagination
+    const pag = document.getElementById('pagination');
+    if (totalPages <= 1) { pag.innerHTML = ''; return; }
+    let pagHtml = `<button \\){state.tablePage === 0 ? 'disabled' : ''} onclick="goPage(0)">⟪</button>`;
+    pagHtml += `<button <inlineMath>{state.tablePage === 0 ? 'disabled' : ''} onclick="goPage(</inlineMath>{state.tablePage - 1})">⟨</button>`;
+
+    const maxButtons = 7;
+    let startPage = Math.max(0, state.tablePage - Math.floor(maxButtons / 2));
+    let endPage = Math.min(totalPages - 1, startPage + maxButtons - 1);
+    if (endPage - startPage < maxButtons - 1) startPage = Math.max(0, endPage - maxButtons + 1);
+
+    for (let p = startPage; p <= endPage; p++) {
+        pagHtml += `<button class="<inlineMath>{p === state.tablePage ? 'active' : ''}" onclick="goPage(</inlineMath>{p})">\\({p + 1}</button>`;
+    }
+    pagHtml += `<button \\){state.tablePage === totalPages - 1 ? 'disabled' : ''} onclick="goPage(\\({state.tablePage + 1})">⟩</button>`;
+    pagHtml += `<button \\){state.tablePage === totalPages - 1 ? 'disabled' : ''} onclick="goPage(\\({totalPages - 1})">⟫</button>`;
+    pagHtml += `<span class="page-info">\\){state.tablePage + 1} / \\({totalPages}</span>`;
+    pag.innerHTML = pagHtml;
+}
+
+function sortTable(col) {
+    if (state.sortCol === col) { state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc'; }
+    else { state.sortCol = col; state.sortDir = 'asc'; }
+    state.tablePage = 0;
+    renderTable();
+}
+
+function goPage(p) { state.tablePage = p; renderTable(); }
+
+// ======================== DISTRIBUTION ========================
+function drawDistributions() {
+    const data = getFilteredData();
+    const numCols = getNumericCols();
+    const area = document.getElementById('distChartArea');
+    const binCount = parseInt(document.getElementById('binCount').value) || 15;
+
+    // Destroy previous dist charts
+    Object.keys(state.charts).forEach(k => {
+        if (k.startsWith('dist_')) destroyChart(k);
+    });
+
+    if (numCols.length === 0) { area.innerHTML = '<p style="color:var(--text-secondary);font-size:14px;">수치형 컬럼이 없습니다.</p>'; return; }
+
+    area.innerHTML = numCols.map(h => `<div class="dist-chart-item"><h4>\\){h}</h4><div class="chart-canvas-wrap" style="height:220px;"><canvas id="dist_\\({CSS.escape(h)}"></canvas></div></div>`).join('');
+
+    numCols.forEach(h => {
+        const vals = getNumericValues(data, h);
+        if (vals.length === 0) return;
+        const mn = Math.min(...vals), mx = Math.max(...vals);
+        const range = mx - mn || 1;
+        const binSize = range / binCount;
+        const bins = Array(binCount).fill(0);
+        const labels = [];
+        for (let i = 0; i < binCount; i++) {
+            labels.push(fmt(mn + binSiz * , 1));
+            vals.forEach(v => {
+                const idx = Math.min(Math.floor((v - mn) / binSize), binCount - 1);
+                if (idx === i) bins[i]++;
+            });
+        }
+
+        const canvasId = `dist_\\){CSS.escape(h)}`;
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+
+        state.charts[canvasId] = new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: '빈도',
+                    data: bins,
+                    backgroundColor: 'rgba(79,70,229,0.5)',
+                    borderColor: '#4f46e5',
+                    borderWidth: 1,
+                    borderRadius: 3
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { ticks: { maxRotation: 45, font: { size: 10 } } }, y: { beginAtZero: true } }
+            }
+        });
+    });
+}
+
+// ======================== CORRELATION ========================
+function renderCorrelation() {
+    const data = getFilteredData();
+    const numCols = getNumericCols();
+
+    if (numCols.length < 2) {
+        document.getElementById('corrMatrix').innerHTML = '<p style="color:var(--text-secondary);font-size:14px;">상관분석에는 수치형 컬럼이 2개 이상 필요합니다.</p>';
+        return;
+    }
+
+    const matrix = [];
+    for (let i = 0; i < numCols.length; i++) {
+        matrix[i] = [];
+        for (let j = 0; j < numCols.length; j++) {
+            if (i === j) { matrix[i][j] = 1; }
+            else if (j < i) { matrix[i][j] = matrix[j][i]; }
+            else {
+                const x = getNumericValues(data, numCols[i]);
+                const y = getNumericValues(data, numCols[j]);
+                const minLen = Math.min(x.length, y.length);
+                matrix[i][j] = pearsonCorr(x.slice(0, minLen), y.slice(0, minLen));
+            }
+        }
+    }
+
+    // Table
+    let html = '<table class="corr-table"><thead><tr><th></th>';
+    numCols.forEach(h => html += `<th>\\({h}</th>`);
+    html += '</tr></thead><tbody>';
+    numCols.forEach((h, i) => {
+        html += `<tr><th>\\){h}</th>`;
+        numCols.forEach((_, j) => {
+            const v = matrix[i][j];
+            const abs = Math.abs(v);
+            const r = v > 0 ? Math.round(ab * 00) : Math.round(ab * 0);
+            const g = Math.round((1 - abs * 00) + 100;
+            const b = v < 0 ? Math.round(ab * 00) : Math.round(ab * 0);
+            const bg = `rgba(\\({r},\\){g},\\({b},\\){ab * .4 + 0.05})`;
+            html += `<td style="background:\\({bg};font-weight:\\){abs > 0.5 ? '700' : '400'}">\\({v.toFixed(3)}</td>`;
+        });
+        html += '</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('corrMatrix').innerHTML = html;
+
+    // Heatmap
+    destroyChart('corrHeatmap');
+
+    const heatData = [];
+    for (let i = 0; i < numCols.length; i++) {
+        for (let j = 0; j < numCols.length; j++) {
+            heatData.push({ x: numCols[j], y: numCols[i], v: matrix[i][j] });
+        }
+    }
+
+    // Use bubble chart for heatmap
+    const datasets = [];
+    for (let i = 0; i < numCols.length; i++) {
+        for (let j = 0; j < numCols.length; j++) {
+            const v = matrix[i][j];
+            const abs = Math.abs(v);
+            const color = v >= 0
+                ? `rgba(79,70,229,\\){ab * .8 + 0.1})`
+                : `rgba(239,68,68,\\({ab * .8 + 0.1})`;
+            datasets.push({
+                data: [{ x: j, y: i, r: ab * 8 + 3 }],
+                backgroundColor: color,
+                borderColor: 'transparent'
+            });
+        }
+    }
+
+    state.charts['corrHeatmap'] = new Chart(document.getElementById('corrHeatmap'), {
+        type: 'bubble',
+        data: { datasets },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: {
+                callbacks: {
+                    label: (ctx) => {
+                        const i = Math.floor(ctx.datasetIndex / numCols.length);
+                        const j = ctx.datasetIndex % numCols.length;
+                        return `\\){numCols[i]} * <inlineMath>{numCols[j]}: </inlineMath>{matrix[i][j].toFixed(3)}`;
+                    }
+                }
+            }},
+            scales: {
+                x: { type: 'linear', min: -0.5, max: numCols.length - 0.5, ticks: { callback: (v) => numCols[v] || '', stepSize: 1, font: { size: 10 } } },
+                y: { type: 'linear', min: -0.5, max: numCols.length - 0.5, ticks: { callback: (v) => numCols[v] || '', stepSize: 1, font: { size: 10 } }, reverse: true }
+            }
+        }
+    });
+}
+
+function drawScatter() {
+    const data = getFilteredData();
+    const xCol = document.getElementById('scatterX').value;
+    const yCol = document.getElementById('scatterY').value;
+    if (!xCol || !yCol) return;
+
+    destroyChart('scatterChart');
+
+    const points = data
+        .filter(r => r[xCol] !== null && r[yCol] !== null && !isNaN(r[xCol]) && !isNaN(r[yCol]))
+        .map(r => ({ x: parseFloat(r[xCol]), y: parseFloat(r[yCol]) }));
+
+    state.charts['scatterChart'] = new Chart(document.getElementById('scatterChart'), {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: `\\({xCol} vs \\){yCol}`,
+                data: points,
+                backgroundColor: 'rgba(79,70,229,0.4)',
+                borderColor: '#4f46e5',
+                pointRadius: 4,
+                pointHoverRadius: 7
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { title: { display: true, text: xCol } },
+                y: { title: { display: true, text: yCol } }
+            }
+        }
+    });
+}
+
+// ======================== REGRESSION ========================
+function runRegression() {
+    const data = getFilteredData();
+    const xCol = document.getElementById('regX').value;
+    const yCol = document.getElementById('regY').value;
+    if (!xCol || !yCol) { toast('변수를 선택하세요.', 'warning'); return; }
+    if (xCol === yCol) { toast('서로 다른 변수를 선택하세요.', 'warning'); return; }
+
+    const pairs = data.filter(r => r[xCol] !== null && r[yCol] !== null && !isNaN(r[xCol]) && !isNaN(r[yCol]))
+                      .map(r => [parseFloat(r[xCol]), parseFloat(r[yCol])]);
+
+    if (pairs.length < 3) { toast('유효한 데이터가 부족합니다.', 'error'); return; }
+
+    const xs = pairs.map(p => p[0]), ys = pairs.map(p => p[1]);
+    const n = xs.length;
+    const mx = mean(xs), my = mean(ys);
+    const ssxy = xs.reduce((s, x, i) => s + (x - mx * ys[i] - my), 0);
+    const ssxx = xs.reduce((s, x) => s + (x - mx) ** 2, 0);
+    const slope = ssxx === 0 ? 0 : ssxy / ssxx;
+    const intercept = my - slop * x;
+
+    const yPred = xs.map(x => slop *  + intercept);
+    const ssTot = ys.reduce((s, y) => s + (y - my) ** 2, 0);
+    const ssRes = ys.reduce((s, y, i) => s + (y - yPred[i]) ** 2, 0);
+    const r2 = ssTot === 0 ? 0 : 1 - ssRes / ssTot;
+    const r = Math.sqrt(r2 * slope >= 0 ? 1 : -1);
+    const mse = ssRes / n;
+    const rmse = Math.sqrt(mse);
+
+    document.getElementById('regressionResult').style.display = 'grid';
+    document.getElementById('regStats').innerHTML = `
+        <div class="reg-stat"><div class="label">R²</div><div class="value">\\({r2.toFixed(4)}</div></div>
+        <div class="reg-stat"><div class="label">상관계수 (r)</div><div class="value">\\){r.toFixed(4)}</div></div>
+        <div class="reg-stat"><div class="label">RMSE</div><div class="value">\\({fmt(rmse, 4)}</div></div>
+        <div class="reg-stat"><div class="label">데이터 수</div><div class="value">\\){n}</div></div>
+    `;
+    document.getElementById('regEquation').innerHTML = `<strong>회귀식:</strong> \\({yCol} = \\){fmt(slope, 4)} * <inlineMath>{xCol} + </inlineMath>{fmt(intercept, 4)}`;
+
+    destroyChart('regChart');
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+
+    state.charts['regChart'] = new Chart(document.getElementById('regChart'), {
+        type: 'scatter',
+        data: {
+            datasets: [
+                {
+                    label: '데이터',
+                    data: pairs.map(p => ({ x: p[0], y: p[1] })),
+                    backgroundColor: 'rgba(79,70,229,0.3)',
+                    borderColor: '#4f46e5',
+                    pointRadius: 3
+                },
+                {
+                    label: '회귀선',
+                    data: [{ x: minX, y: slop * inX + intercept }, { x: maxX, y: slop * axX + intercept }],
+                    type: 'line',
+                    borderColor: '#ef4444',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' } },
+            scales: { x: { title: { display: true, text: xCol } }, y: { title: { display: true, text: yCol } } }
+        }
+    });
+}
+
+// ======================== OUTLIERS ========================
+function detectOutliers() {
+    const data = getFilteredData();
+    const numCols = getNumericCols();
+    const multiplier = parseFloat(document.getElementById('iqrMultiplier').value) || 1.5;
+    const container = document.getElementById('outlierResults');
+
+    if (numCols.length === 0) { container.innerHTML = '<p style="color:var(--text-secondary);">수치형 컬럼이 없습니다.</p>'; return; }
+
+    let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(350px,1fr));gap:16px;">';
+    numCols.forEach(col => {
+        const vals = getNumericValues(data, col);
+        if (vals.length < 4) return;
+        const q1v = q1(vals), q3v = q3(vals);
+        const iqr = q3v - q1v;
+        const lower = q1v - multiplie * qr;
+        const upper = q3v + multiplie * qr;
+        const outliers = [];
+        data.forEach((r, i) => {
+            const v = parseFloat(r[col]);
+            if (!isNaN(v) && (v < lower || v > upper)) outliers.push({ row: i + 1, value: v });
+        });
+
+        html += `<div style="background:var(--surface-alt);border-radius:var(--radius-sm);padding:16px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <strong style="font-size:14px;">\\({col}</strong>
+                <span style="font-size:12px;padding:2px 8px;border-radius:12px;font-weight:700;\\){outliers.length > 0 ? 'background:#fef2f2;color:#dc2626;' : 'background:#f0fdf4;color:#16a34a;'}">\\({outliers.length}개</span>
+            </div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">
+                Q1: \\){fmt(q1v)} | Q3: \\({fmt(q3v)} | IQR: \\){fmt(iqr)}<br>
+                범위: [<inlineMath>{fmt(lower)}, </inlineMath>{fmt(upper)}]
+            </div>`;
+        if (outliers.length > 0) {
+            html += '<div class="outlier-list">';
+            outliers.slice(0, 20).forEach(o => {
+                html += `<div class="outlier-item"><span>행 \\({o.row}</span><span class="outlier-value">\\){fmt(o.value)}</span></div>`;
+            });
+            if (outliers.length > 20) html += `<div class="outlier-item" style="color:var(--text-secondary);">... 외 \\({outliers.length - 20}개</div>`;
+            html += '</div>';
+        } else {
+            html += '<div style="font-size:13px;color:var(--success);">이상치가 발견되지 않았습니다.</div>';
+        }
+        html += '</div>';
+    });
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// ======================== PIVOT TABLE ========================
+function generatePivot() {
+    const data = getFilteredData();
+    const rowCol = document.getElementById('pivotRow').value;
+    const valCol = document.getElementById('pivotValue').value;
+    const aggType = document.getElementById('pivotAgg').value;
+
+    if (!rowCol || !valCol) { toast('필드를 선택하세요.', 'warning'); return; }
+
+    const groups = {};
+    data.forEach(r => {
+        const key = String(r[rowCol] || '(빈 값)');
+        if (!groups[key]) groups[key] = [];
+        const v = parseFloat(r[valCol]);
+        if (!isNaN(v)) groups[key].push(v);
+    });
+
+    const aggFn = {
+        sum: arr => arr.reduce((a, b) => a + b, 0),
+        mean: arr => mean(arr),
+        count: arr => arr.length,
+        min: arr => Math.min(...arr),
+        max: arr => Math.max(...arr),
+        median: arr => median(arr)
+    };
+
+    const aggLabels = { sum: '합계', mean: '평균', count: '개수', min: '최소', max: '최대', median: '중앙값' };
+
+    const results = Object.entries(groups)
+        .map(([key, vals]) => ({ key, value: vals.length > 0 ? aggFn[aggType](vals) : 0, count: vals.length }))
+        .sort((a, b) => b.value - a.value);
+
+    let html = '<table class="data-table"><thead><tr><th>' + rowCol + '</th><th>' + valCol + ' (' + aggLabels[aggType] + ')</th><th>데이터 수</th></tr></thead><tbody>';
+    results.forEach(r => {
+        html += `<tr><td>\\){r.key}</td><td style="font-weight:700;"><inlineMath>{fmt(r.value)}</td><td></inlineMath>{r.count}</td></tr>`;
+    });
+    html += '</tbody></table>';
+
+    // Also add a bar chart
+    html += '<div style="margin-top:16px;"><div class="chart-canvas-wrap" style="height:300px;"><canvas id="pivotChart"></canvas></div></div>';
+
+    document.getElementById('pivotResult').innerHTML = html;
+
+    destroyChart('pivotChart');
+    const topN = results.slice(0, 20);
+    state.charts['pivotChart'] = new Chart(document.getElementById('pivotChart'), {
+        type: 'bar',
+        data: {
+            labels: topN.map(r => r.key),
+            datasets: [{
+                label: aggLabels[aggType],
+                data: topN.map(r => r.value),
+                backgroundColor: 'rgba(14,165,233,0.5)',
+                borderColor: '#0ea5e9',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false, indexAxis: results.length > 10 ? 'y' : 'x',
+            plugins: { legend: { display: false } }
+        }
+    });
+}
+
+// ======================== COMPARE ========================
+function renderCompare() {
+    const container = document.getElementById('compareContent');
+    if (state.datasets.length < 2) {
+        container.innerHTML = '<p style="color:var(--text-secondary);font-size:14px;">2개 이상의 데이터셋을 업로드하면 비교 분석이 가능합니다.</p>';
+        return;
+    }
+
+    let html = '<div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>항목</th>';
+    state.datasets.forEach(ds => html += `<th>\\({ds.name}</th>`);
+    html += '</tr></thead><tbody>';
+
+    // Row count
+    html += '<tr><td style="font-weight:700;">행 수</td>';
+    state.datasets.forEach(ds => html += `<td>\\){ds.data.length.toLocaleString()}</td>`);
+    html += '</tr>';
+
+    // Col count
+    html += '<tr><td style="font-weight:700;">열 수</td>';
+    state.datasets.forEach(ds => html += `<td>\\({ds.headers.length}</td>`);
+    html += '</tr>';
+
+    // Numeric cols
+    html += '<tr><td style="font-weight:700;">수치형 열</td>';
+    state.datasets.forEach(ds => html += `<td>\\){ds.headers.filter(h => ds.colTypes[h] === 'numeric').length}</td>`);
+    html += '</tr>';
+
+    // Common columns
+    const allHeaders = state.datasets.map(ds => new Set(ds.headers));
+    let common = [...allHeaders[0]];
+    for (let i = 1; i < allHeaders.length; i++) {
+        common = common.filter(h => allHeaders[i].has(h));
+    }
+    html += `<tr><td style="font-weight:700;">공통 컬럼</td><td colspan="\\({state.datasets.length}">\\){common.length > 0 ? common.join(', ') : '없음'}</td></tr>`;
+
+    // For common numeric columns, show means
+    const commonNumeric = common.filter(h => state.datasets.every(ds => ds.colTypes[h] === 'numeric'));
+    commonNumeric.forEach(col => {
+        html += `<tr><td style="font-weight:700;">\\({col} (평균)</td>`;
+        state.datasets.forEach(ds => {
+            const vals = getNumericValues(ds.data, col);
+            html += `<td>\\){fmt(mean(vals))}</td>`;
+        });
+        html += '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+
+    // Comparison chart for common numeric columns
+    if (commonNumeric.length > 0) {
+        html += '<div style="margin-top:20px;"><div class="chart-canvas-wrap" style="height:300px;"><canvas id="compareChart"></canvas></div></div>';
+    }
+
+    container.innerHTML = html;
+
+    if (commonNumeric.length > 0) {
+        destroyChart('compareChart');
+        const colors = ['rgba(79,70,229,0.6)', 'rgba(14,165,233,0.6)', 'rgba(16,185,129,0.6)', 'rgba(245,158,11,0.6)', 'rgba(239,68,68,0.6)'];
+        const borderColors = ['#4f46e5', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'];
+
+        state.charts['compareChart'] = new Chart(document.getElementById('compareChart'), {
+            type: 'bar',
+            data: {
+                labels: commonNumeric,
+                datasets: state.datasets.map((ds, i) => ({
+                    label: ds.name,
+                    data: commonNumeric.map(col => mean(getNumericValues(ds.data, col))),
+                    backgroundColor: colors[i % colors.length],
+                    borderColor: borderColors[i % borderColors.length],
+                    borderWidth: 1,
+                    borderRadius: 4
+                }))
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'top' } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+}
+
+// ======================== EXPORT ========================
+function exportCSV() {
+    const ds = getActiveDataset();
+    if (!ds) return;
+    const data = getFilteredData();
+    let csv = ds.headers.map(h => `"\\({h}"`).join(',') + '\n';
+    data.forEach(r => {
+        csv += ds.headers.map(h => {
+            const v = r[h];
+            if (v === null || v === undefined) return '';
+            return typeof v === 'string' ? `"\\){v.replace(/"/g, '""')}"` : v;
+        }).join(',') + '\n';
+    });
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `\\({ds.name}_filtered.csv`;
+    link.click();
+    toast('CSV 파일이 다운로드됩니다.');
+}
+
+// ======================== CHART UTILS ========================
+function destroyChart(id) {
+    if (state.charts[id]) {
+        state.charts[id].destroy();
+        delete state.charts[id];
+    }
+}
+
+// ======================== TAB SWITCHING ========================
+document.getElementById('analysisTabs').addEventListener('click', (e) => {
+    const tab = e.target.closest('.analysis-tab');
+    if (!tab) return;
+    const tabName = tab.dataset.tab;
+
+    document.querySelectorAll('.analysis-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + tabName).classList.add('active');
+
+    // Redraw charts when switching tabs
+    setTimeout(() => {
+        Object.values(state.charts).forEach(c => { try { c.resize(); } catch (_) {} });
+    }, 100);
+});
+
+// ======================== INIT ========================
+document.addEventListener('DOMContentLoaded', () => {
+    // Check local storage for onboarding
+    if (localStorage.getItem('datalens_onboarding_closed')) {
+        document.getElementById('onboarding').classList.add('hidden');
+    }
+});
+
+document.querySelector('.close-onboarding').addEventListener('click', () => {
+    localStorage.setItem('datalens_onboarding_closed', '1');
+});
+</script>
+</body>
+</html>
