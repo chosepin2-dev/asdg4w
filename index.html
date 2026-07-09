@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart To-Do</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI','Apple SD Gothic Neo',sans-serif;background:#0f0f1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.wrap{max-width:900px;margin:0 auto}
+h1{text-align:center;font-size:1.8rem;background:linear-gradient(135deg,#a29bfe,#00cec9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.now{text-align:center;color:#888;font-size:.85rem;margin-bottom:20px}
+.stats{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
+.stat{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:10px;padding:10px 20px;text-align:center;min-width:100px}
+.stat b{display:block;font-size:1.4rem}
+.stat span{font-size:.75rem;color:#888}
+.s-total b{color:#a29bfe}.s-done b{color:#00b894}.s-pend b{color:#fdcb6e}.s-over b{color:#ff7675}
+
+.filters{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:12px;padding:15px;margin-bottom:20px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:.75rem;color:#888}
+.fg select,.fg input{padding:7px 10px;background:#16213e;border:1px solid #2a2a4a;border-radius:6px;color:#e0e0e0;font-size:.85rem}
+.fg select:focus,.fg input:focus{border-color:#6c5ce7;outline:none}
+.days{display:flex;gap:3px}
+.dbtn{padding:5px 8px;border:1px solid #2a2a4a;background:#16213e;color:#888;border-radius:5px;cursor:pointer;font-size:.72rem}
+.dbtn.on{background:#6c5ce7;border-color:#6c5ce7;color:#fff}
+.btn-reset{padding:7px 14px;background:transparent;border:1px solid #2a2a4a;border-radius:6px;color:#888;cursor:pointer;font-size:.8rem;align-self:flex-end}
+.btn-reset:hover{border-color:#ff7675;color:#ff7675}
+
+.add-sec{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:12px;padding:15px;margin-bottom:15px}
+.add-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.add-row input,.add-row select,.add-row textarea{padding:8px 10px;background:#16213e;border:1px solid #2a2a4a;border-radius:6px;color:#e0e0e0;font-size:.88rem}
+.add-row input:focus,.add-row select:focus,.add-row textarea:focus{border-color:#6c5ce7;outline:none}
+.add-row .title-in{flex:1;min-width:180px}
+.add-row textarea{width:100%;min-height:45px;resize:vertical;font-family:inherit}
+.btn-add{padding:8px 24px;background:linear-gradient(135deg,#6c5ce7,#5b4cdb);border:none;border-radius:6px;color:#fff;font-size:.9rem;cursor:pointer;font-weight:600}
+.btn-add:hover{opacity:.9}
+
+.toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.toolbar input{flex:1;min-width:150px;padding:8px 12px;background:#1a1a2e;border:1px solid #2a2a4a;border-radius:8px;color:#e0e0e0;font-size:.88rem}
+.toolbar input:focus{border-color:#6c5ce7;outline:none}
+.toolbar select{padding:8px 12px;background:#1a1a2e;border:1px solid #2a2a4a;border-radius:8px;color:#e0e0e0;font-size:.85rem}
+.toolbar button{padding:8px 14px;background:#1a1a2e;border:1px solid #2a2a4a;border-radius:8px;color:#888;cursor:pointer;font-size:.8rem}
+.toolbar button:hover{border-color:#6c5ce7;color:#e0e0e0}
+
+.list{display:flex;flex-direction:column;gap:8px}
+.todo{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:10px;padding:12px;display:flex;align-items:flex-start;gap:10px;transition:opacity .2s;position:relative;border-left:4px solid transparent;animation:fadeIn .25s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.todo.p-high{border-left-color:#ff7675}.todo.p-medium{border-left-color:#fdcb6e}.todo.p-low{border-left-color:#00b894}
+.todo.done{opacity:.45}
+.todo.done .t-title{text-decoration:line-through}
+.todo.overdue-item{border-color:rgba(255,118,117,.3)}
+.chk{width:20px;height:20px;border:2px solid #2a2a4a;border-radius:50%;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s;margin-top:2px;font-size:.7rem}
+.chk:hover{border-color:#6c5ce7}
+.chk.on{background:#00b894;border-color:#00b894;color:#fff}
+.t-body{flex:1;min-width:0}
+.t-title{font-weight:600;word-break:break-word;margin-bottom:3px}
+.t-desc{font-size:.82rem;color:#888;margin-bottom:5px;word-break:break-word}
+.t-meta{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:.72rem;padding:2px 7px;border-radius:10px}
+.tag-pri{background:rgba(108,92,231,.2);color:#a29bfe}
+.tag-cat{background:rgba(0,184,148,.15);color:#00b894}
+.tag-date{background:rgba(0,206,201,.15);color:#00cec9}
+.tag-time{background:rgba(253,203,110,.15);color:#fdcb6e}
+.tag-due{background:rgba(255,118,117,.15);color:#ff7675}
+.t-acts{display:flex;gap:5px;flex-shrink:0}
+.t-acts button{width:28px;height:28px;border:1px solid #2a2a4a;background:#16213e;color:#888;border-radius:5px;cursor:pointer;font-size:.78rem;display:flex;align-items:center;justify-content:center}
+.t-acts button:hover{border-color:#6c5ce7;color:#e0e0e0}
+.t-acts .del:hover{border-color:#ff7675;color:#ff7675}
+
+.subs{margin-top:6px;padding-left:3px}
+.sub{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:.8rem;color:#888}
+.sub-chk{width:14px;height:14px;border:1.5px solid #2a2a4a;border-radius:3px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.6rem}
+.sub-chk.on{background:#00b894;border-color:#00b894;color:#fff}
+.sub.sdone .stxt{text-decoration:line-through;opacity:.5}
+.sub-x{cursor:pointer;color:#ff7675;font-size:.7rem;margin-left:auto}
+.sub-add{display:flex;gap:5px;margin-top:4px}
+.sub-add input{flex:1;padding:4px 7px;background:#16213e;border:1px solid #2a2a4a;border-radius:4px;color:#e0e0e0;font-size:.78rem;outline:none}
+.sub-add button{padding:4px 8px;background:#6c5ce7;border:none;border-radius:4px;color:#fff;cursor:pointer;font-size:.78rem}
+.pbar{width:100%;height:3px;background:#2a2a4a;border-radius:2px;margin-top:6px}
+.pfill{height:100%;background:#00b894;border-radius:2px;transition:width .3s}
+
+.empty{text-align:center;padding:50px 20px;color:#888}
+.empty .ei{font-size:2.5rem;margin-bottom:10px}
+
+.modal-bg{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:1000;justify-content:center;align-items:center;padding:20px}
+.modal-bg.show{display:flex}
+.modal{background:#1a1a2e;border:1px solid #2a2a4a;border-radius:14px;padding:20px;max-width:450px;width:100%;max-height:80vh;overflow-y:auto}
+.modal h3{color:#a29bfe;margin-bottom:12px}
+.modal .fg{margin-bottom:8px}
+.modal .fg input,.modal .fg select,.modal .fg textarea{width:100%}
+.modal textarea{min-height:50px;resize:vertical;font-family:inherit}
+.m-acts{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.m-acts button{padding:8px 18px;border-radius:6px;cursor:pointer;font-size:.88rem;border:1px solid #2a2a4a}
+.m-save{background:#6c5ce7;color:#fff;border-color:#6c5ce7 !important}
+.m-cancel{background:transparent;color:#888}
+
+.toast{position:fixed;bottom:25px;right:25px;padding:10px 20px;background:#1a1a2e;border:1px solid #6c5ce7;border-radius:8px;color:#e0e0e0;font-size:.88rem;z-index:2000;animation:ti .3s,to .3s 2.5s forwards}
+@keyframes ti{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+@keyframes to{from{opacity:1}to{opacity:0}}
+
+@media(max-width:600px){.filters{flex-direction:column}.stats{gap:6px}.stat{min-width:70px;padding:8px 12px}.stat b{font-size:1.1rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>📋 Smart To-Do</h1>
+<div class="now" id="now"></div>
+
+<div class="stats">
+<div class="stat s-total"><b id="stTotal">0</b><span>전체</span></div>
+<div class="stat s-done"><b id="stDone">0</b><span>완료</span></div>
+<div class="stat s-pend"><b id="stPend">0</b><span>진행</span></div>
+<div class="stat s-over"><b id="stOver">0</b><span>초과</span></div>
+</div>
+
+<div class="filters">
+<div class="fg"><label>연도</label><select id="fYear" onchange="render()"><option value="">전체</option></select></div>
+<div class="fg"><label>월</label><select id="fMonth" onchange="render()"><option value="">전체</option><option value="0">1월</option><option value="1">2월</option><option value="2">3월</option><option value="3">4월</option><option value="4">5월</option><option value="5">6월</option><option value="6">7월</option><option value="7">8월</option><option value="8">9월</option><option value="9">10월</option><option value="10">11월</option><option value="11">12월</option></select></div>
+<div class="fg"><label>요일</label><div class="days" id="dayBtns"><div class="dbtn on" data-d="all">전체</div><div class="dbtn" data-d="0">일</div><div class="dbtn" data-d="1">월</div><div class="dbtn" data-d="2">화</div><div class="dbtn" data-d="3">수</div><div class="dbtn" data-d="4">목</div><div class="dbtn" data-d="5">금</div><div class="dbtn" data-d="6">토</div></div></div>
+<div class="fg"><label>시간</label><div style="display:flex;gap:4px;align-items:center"><input type="time" id="fTimeS" onchange="render()" style="width:100px"><span style="color:#888">~</span><input type="time" id="fTimeE" onchange="render()" style="width:100px"></div></div>
+<div class="fg"><label>우선순위</label><select id="fPri" onchange="render()"><option value="">전체</option><option value="high">높음</option><option value="medium">보통</option><option value="low">낮음</option></select></div>
+<div class="fg"><label>카테고리</label><select id="fCat" onchange="render()"><option value="">전체</option><option value="업무">업무</option><option value="개인">개인</option><option value="학습">학습</option><option value="건강">건강</option><option value="기타">기타</option></select></div>
+<div class="fg"><label>상태</label><select id="fStatus" onchange="render()"><option value="">전체</option><option value="pending">진행</option><option value="done">완료</option><option value="overdue">초과</option></select></div>
+<button class="btn-reset" onclick="resetF()">초기화</button>
+</div>
+
+<div class="add-sec">
+<div class="add-row">
+<input class="title-in" id="aTitle" placeholder="할 일 제목..." onkeydown="if(event.key==='Enter')addTodo()">
+<select id="aPri"><option value="medium">보통</option><option value="high">높음</option><option value="low">낮음</option></select>
+<select id="aCat"><option value="업무">업무</option><option value="개인">개인</option><option value="학습">학습</option><option value="건강">건강</option><option value="기타">기타</option></select>
+</div>
+<div class="add-row"><textarea id="aDesc" placeholder="설명 (선택)..." rows="1"></textarea></div>
+<div class="add-row">
+<input type="date" id="aDate"><input type="time" id="aTime">
+<input type="date" id="aDue" title="마감일"><input type="time" id="aDueT" title="마감시간">
+<button class="btn-add" onclick="addTodo()">추가</button>
+</div>
+</div>
+
+<div class="toolbar">
+<input id="search" placeholder="🔍 검색..." oninput="render()">
+<select id="sort" onchange="render()">
+<option value="new">최신순</option><option value="old">오래된순</option>
+<option value="dateA">날짜▲</option><option value="dateD">날짜▼</option>
+<option value="priH">우선순위▼</option><option value="priL">우선순위▲</option>
+<option value="name">이름순</option>
+</select>
+<button onclick="exportJSON()">📤 내보내기</button>
+<button onclick="document.getElementById('impF').click()">📥 가져오기</button>
+<input type="file" id="impF" accept=".json" onchange="importJSON(event)" style="display:none">
+<button onclick="clearDone()">🗑 완료삭제</button>
+</div>
+
+<div class="list" id="list"></div>
+</div>
+
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+<div class="modal">
+<h3>✏️ 수정</h3>
+<input type="hidden" id="eId">
+<div class="fg"><label>제목</label><input id="eTitle"></div>
+<div class="fg"><label>설명</label><textarea id="eDesc" rows="2"></textarea></div>
+<div class="fg"><label>날짜</label><input type="date" id="eDate"></div>
+<div class="fg"><label>시간</label><input type="time" id="eTime"></div>
+<div class="fg"><label>마감일</label><input type="date" id="eDue"></div>
+<div class="fg"><label>마감시간</label><input type="time" id="eDueT"></div>
+<div class="fg"><label>우선순위</label><select id="ePri"><option value="high">높음</option><option value="medium">보통</option><option value="low">낮음</option></select></div>
+<div class="fg"><label>카테고리</label><select id="eCat"><option value="업무">업무</option><option value="개인">개인</option><option value="학습">학습</option><option value="건강">건강</option><option value="기타">기타</option></select></div>
+<div class="m-acts"><button class="m-cancel" onclick="closeModal()">취소</button><button class="m-save" onclick="saveEdit()">저장</button></div>
+</div>
+</div>
+
+<script>
+let todos=JSON.parse(localStorage.getItem('todos')||'[]');
+const \\(=id=>document.getElementById(id);
+const esc=s=>{const d=document.createElement('div');d.textContent=s;return d.innerHTML};
+const DN=['일','월','화','수','목','금','토'];
+let selDays=['all'];
+
+function save(){localStorage.setItem('todos',JSON.stringify(todos));render()}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),3000)}
+
+function updateNow(){const n=new Date();\\)('now').textContent=`<inlineMath>{n.getFullYear()}년 </inlineMath>{n.getMonth()+1}월 <inlineMath>{n.getDate()}일 (</inlineMath>{DN[n.getDay()]}) \\({n.toLocaleTimeString('ko-KR')}`}
+setInterval(updateNow,1000);updateNow();
+
+(function initDate(){\\)('aDate').value=new Date().toISOString().split('T')[0]})();
+
+function populateYears(){
+const s=\\(('fYear');const v=s.value;s.innerHTML='<option value="">전체</option>';
+const yrs=new Set();yrs.add(new Date().getFullYear());
+todos.forEach(t=>{if(t.date)yrs.add(new Date(t.date).getFullYear())});
+[...yrs].sort((a,b)=>b-a).forEach(y=>{s.innerHTML+=`<option value="\\){y}">\\({y}년</option>`});
+s.value=v;
+}
+
+document.getElementById('dayBtns').addEventListener('click',e=>{
+const b=e.target;if(!b.classList.contains('dbtn'))return;
+const d=b.dataset.d;
+if(d==='all'){selDays=['all'];document.querySelectorAll('.dbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on')}
+else{document.querySelector('.dbtn[data-d="all"]').classList.remove('on');b.classList.toggle('on');
+selDays=selDays.filter(x=>x!=='all');if(b.classList.contains('on'))selDays.push(d);else selDays=selDays.filter(x=>x!==d);
+if(!selDays.length){selDays=['all'];document.querySelector('.dbtn[data-d="all"]').classList.add('on')}}
+render();
+});
+
+function isOverdue(t){if(t.done||!t.dueDate)return false;const now=new Date();const due=new Date(t.dueDate+(t.dueTime?'T'+t.dueTime:'T23:59:59'));return now>due}
+
+function filtered(){
+let f=[...todos];
+const yr=\\)('fYear').value,mo=<inlineMath>('fMonth').value,ts=</inlineMath>('fTimeS').value,te=\\(('fTimeE').value;
+const pri=\\)('fPri').value,cat=<inlineMath>('fCat').value,st=</inlineMath>('fStatus').value;
+const q=\\(('search').value.toLowerCase().trim();
+if(yr)f=f.filter(t=>t.date&&new Date(t.date).getFullYear()==yr);
+if(mo!=='')f=f.filter(t=>t.date&&new Date(t.date).getMonth()==parseInt(mo));
+if(!selDays.includes('all'))f=f.filter(t=>t.date&&selDays.includes(String(new Date(t.date).getDay())));
+if(ts)f=f.filter(t=>!t.time||t.time>=ts);
+if(te)f=f.filter(t=>!t.time||t.time<=te);
+if(pri)f=f.filter(t=>t.priority===pri);
+if(cat)f=f.filter(t=>t.category===cat);
+if(st==='done')f=f.filter(t=>t.done);
+else if(st==='pending')f=f.filter(t=>!t.done);
+else if(st==='overdue')f=f.filter(t=>isOverdue(t));
+if(q)f=f.filter(t=>t.title.toLowerCase().includes(q)||(t.desc&&t.desc.toLowerCase().includes(q))||t.category.toLowerCase().includes(q));
+const s=\\)('sort').value;const pm={high:3,medium:2,low:1};
+f.sort((a,b)=>{switch(s){
+case'new':return new Date(b.createdAt)-new Date(a.createdAt);
+case'old':return new Date(a.createdAt)-new Date(b.createdAt);
+case'dateA':return(a.date||'9999').localeCompare(b.date||'9999');
+case'dateD':return(b.date||'').localeCompare(a.date||'');
+case'priH':return pm[b.priority]-pm[a.priority];
+case'priL':return pm[a.priority]-pm[b.priority];
+case'name':return a.title.localeCompare(b.title,'ko');
+default:return 0}});
+return f;
+}
+
+function stats(){
+const t=todos.length,d=todos.filter(x=>x.done).length,o=todos.filter(x=>isOverdue(x)).length;
+<inlineMath>('stTotal').textContent=t;</inlineMath>('stDone').textContent=d;<inlineMath>('stPend').textContent=t-d;</inlineMath>('stOver').textContent=o;
+}
+
+function render(){
+populateYears();stats();
+const f=filtered();const c=\\(('list');
+if(!f.length){c.innerHTML='<div class="empty"><div class="ei">📭</div><p>할 일이 없습니다</p></div>';return}
+const PL={high:'높음',medium:'보통',low:'낮음'};
+let h='';
+f.forEach(t=>{
+const ov=isOverdue(t);
+let ds='';
+if(t.date){const d=new Date(t.date);ds=`\\){d.getFullYear()}.<inlineMath>{String(d.getMonth()+1).padStart(2,'0')}.</inlineMath>{String(d.getDate()).padStart(2,'0')} (\\({DN[d.getDay()]})`}
+let due='';
+if(t.dueDate){const d=new Date(t.dueDate);due=`마감: \\){d.getFullYear()}.<inlineMath>{String(d.getMonth()+1).padStart(2,'0')}.</inlineMath>{String(d.getDate()).padStart(2,'0')}`;if(t.dueTime)due+=' '+t.dueTime}
+const subs=t.subtasks||[];
+const sp=subs.length?subs.filter(s=>s.done).length/subs.length*100:-1;
+
+h+=`<div class="todo p-\\({t.priority} \\){t.done?'done':''} \\({ov?'overdue-item':''}">
+<div class="chk \\){t.done?'on':''}" onclick="toggle('<inlineMath>{t.id}')"></inlineMath>{t.done?'✓':''}</div>
+<div class="t-body">
+<div class="t-title">\\({esc(t.title)}</div>
+\\){t.desc?`<div class="t-desc">\\({esc(t.desc)}</div>`:''}
+<div class="t-meta">
+<span class="tag tag-pri">\\){PL[t.priority]}</span>
+<span class="tag tag-cat">\\({esc(t.category)}</span>
+\\){ds?`<span class="tag tag-date">📅 \\({ds}</span>`:''}
+\\){t.time?`<span class="tag tag-time">⏰ \\({t.time}</span>`:''}
+\\){due?`<span class="tag tag-due"><inlineMath>{ov?'⚠️':'🏁'} </inlineMath>{due}</span>`:''}
+</div>
+<inlineMath>{sp>=0?`<div class="pbar"><div class="pfill" style="width:</inlineMath>{sp}%"></div></div>`:''}
+<inlineMath>{subs.length?`<div class="subs"></inlineMath>{subs.map(s=>`<div class="sub <inlineMath>{s.done?'sdone':''}"><div class="sub-chk </inlineMath>{s.done?'on':''}" onclick="togSub('\\({t.id}','\\){s.id}')"><inlineMath>{s.done?'✓':''}</div><span class="stxt"></inlineMath>{esc(s.text)}</span><span class="sub-x" onclick="delSub('\\({t.id}','\\){s.id}')">✕</span></div>`).join('')}</div>`:''}
+<div class="sub-add"><input placeholder="하위 작업..." onkeydown="if(event.key==='Enter')addSub('<inlineMath>{t.id}',this)"><button onclick="addSub('</inlineMath>{t.id}',this.previousElementSibling)">+</button></div>
+</div>
+<div class="t-acts">
+<button onclick="edit('\\({t.id}')" title="수정">✏️</button>
+<button onclick="dup('\\){t.id}')" title="복제">📋</button>
+<button class="del" onclick="del('\\({t.id}')" title="삭제">🗑</button>
+</div></div>`;
+});
+c.innerHTML=h;
+}
+
+function addTodo(){
+const title=\\)('aTitle').value.trim();
+if(!title){toast('⚠️ 제목을 입력하세요');return}
+todos.push({id:uid(),title,desc:<inlineMath>('aDesc').value.trim(),date:</inlineMath>('aDate').value,time:\\(('aTime').value,
+dueDate:\\)('aDue').value,dueTime:<inlineMath>('aDueT').value,priority:</inlineMath>('aPri').value,category:\\(('aCat').value,
+done:false,subtasks:[],createdAt:new Date().toISOString()});
+\\)('aTitle').value='';<inlineMath>('aDesc').value='';</inlineMath>('aTime').value='';<inlineMath>('aDue').value='';</inlineMath>('aDueT').value='';
+save();toast('✅ 추가 완료!')
+}
+
+function toggle(id){const t=todos.find(x=>x.id===id);if(t){t.done=!t.done;t.doneAt=t.done?new Date().toISOString():null;save()}}
+function del(id){if(confirm('삭제할까요?')){todos=todos.filter(x=>x.id!==id);save();toast('🗑 삭제됨')}}
+function dup(id){const t=todos.find(x=>x.id===id);if(t){todos.push({...t,...{id:uid(),done:false,doneAt:null,subtasks:(t.subtasks||[]).map(s=>({...s,done:false})),createdAt:new Date().toISOString()}});save();toast('📋 복제됨')}}
+
+function addSub(tid,inp){const v=inp.value.trim();if(!v)return;const t=todos.find(x=>x.id===tid);if(!t)return;if(!t.subtasks)t.subtasks=[];t.subtasks.push({id:uid(),text:v,done:false});inp.value='';save()}
+function togSub(tid,sid){const t=todos.find(x=>x.id===tid);if(!t)return;const s=(t.subtasks||[]).find(x=>x.id===sid);if(s){s.done=!s.done;save()}}
+function delSub(tid,sid){const t=todos.find(x=>x.id===tid);if(!t)return;t.subtasks=t.subtasks.filter(x=>x.id!==sid);save()}
+
+function edit(id){
+const t=todos.find(x=>x.id===id);if(!t)return;
+<inlineMath>('eId').value=id;</inlineMath>('eTitle').value=t.title;\\(('eDesc').value=t.desc||'';
+\\)('eDate').value=t.date||'';\\(('eTime').value=t.time||'';
+\\)('eDue').value=t.dueDate||'';\\(('eDueT').value=t.dueTime||'';
+\\)('ePri').value=t.priority;\\(('eCat').value=t.category;
+\\)('modalBg').classList.add('show');
+}
+function closeModal(){\\(('modalBg').classList.remove('show')}
+function saveEdit(){
+const t=todos.find(x=>x.id===\\)('eId').value);if(!t)return;
+t.title=\\(('eTitle').value.trim()||t.title;t.desc=\\)('eDesc').value.trim();
+t.date=<inlineMath>('eDate').value;t.time=</inlineMath>('eTime').value;
+t.dueDate=<inlineMath>('eDue').value;t.dueTime=</inlineMath>('eDueT').value;
+t.priority=<inlineMath>('ePri').value;t.category=</inlineMath>('eCat').value;
+closeModal();save();toast('✏️ 수정 완료!')
+}
+
+function resetF(){
+<inlineMath>('fYear').value='';</inlineMath>('fMonth').value='';<inlineMath>('fTimeS').value='';</inlineMath>('fTimeE').value='';
+<inlineMath>('fPri').value='';</inlineMath>('fCat').value='';<inlineMath>('fStatus').value='';</inlineMath>('search').value='';
+selDays=['all'];document.querySelectorAll('.dbtn').forEach(b=>{b.classList.remove('on');if(b.dataset.d==='all')b.classList.add('on')});
+render();
+}
+
+function exportJSON(){
+const b=new Blob([JSON.stringify(todos,null,2)],{type:'application/json'});
+const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='todos_'+new Date().toISOString().slice(0,10)+'.json';a.click();toast('📤 내보내기 완료')
+}
+function importJSON(e){
+const f=e.target.files[0];if(!f)return;const r=new FileReader();
+r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(Array.isArray(d)){todos=d;save();toast('📥 가져오기 완료 ('+d.length+'개)')}else toast('⚠️ 잘못된 형식')}catch{toast('⚠️ 파일 오류')}};
+r.readAsText(f);e.target.value='';
+}
+function clearDone(){const c=todos.filter(t=>t.done).length;if(!c){toast('완료 항목 없음');return}if(confirm(`완료된 \\({c}개를 삭제할까요?`)){todos=todos.filter(t=>!t.done);save();toast('🗑 완료 항목 삭제됨')}}
+
+render();
+</script>
+</body>
+</html>
