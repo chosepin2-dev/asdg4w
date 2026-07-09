@@ -1,76 +1,72 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Todo List</title>
-    <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; padding: 20px; background-color: #f4f4f9; }
-        .container { width: 100%; max-width: 400px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h2 { text-align: center; }
-        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        button#add-btn { padding: 10px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 4px; }
-        ul { list-style: none; padding: 0; }
-        li { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
-        li.completed span { text-decoration: line-through; color: gray; }
-        .delete-btn { background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2>✅ Todo List</h2>
-        <div class="input-group">
-            <input type="text" id="todo-input" placeholder="할 일을 입력하세요...">
-            <button id="add-btn">추가</button>
-        </div>
-        <ul id="todo-list"></ul>
+import React, { useState, useEffect } from 'react';
+
+/**
+ * 사용자 정보 및 API 데이터를 관리하는 현대적인 React 컴포넌트 예시입니다.
+ * TypeScript를 사용할 경우 인터페이스 정의가 포함되지만, 범용성을 위해 JavaScript로 작성되었습니다.
+ */
+const UserDashboard = () => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // 실시간 데이터 Fetching 시뮬레이션
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // 실제 API 호출 시 fetch('https://api.example.com/data') 사용
+        const response = await new Promise((resolve) => 
+          setTimeout(() => resolve([{ id: 1, name: 'Liner AI' }, { id: 2, name: 'Developer' }]), 1000)
+        );
+        setData(response);
+      } catch (err) {
+        setError('데이터를 불러오는 중 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) return <div>로딩 중...</div>;
+  if (error) return <div>{error}</div>;
+
+  return (
+    <div style=padding: '20px', fontFamily: 'sans-serif'{{1}}>
+      <h1>대시보드</h1>
+      <ul>
+        {data.map(item => (
+          <li key={item.id}>{item.name}</li>
+        ))}
+      </ul>
     </div>
+  );
+};
 
-    <script>
-        const input = document.getElementById('todo-input');
-        const addBtn = document.getElementById('add-btn');
-        const todoList = document.getElementById('todo-list');
+/**
+ * Python을 이용한 간단한 데이터 처리 자동화 스크립트 예시입니다.
+ */
+# import pandas as pd # 데이터 분석용 라이브러리 (필요 시 설치)
 
-        // 로컬 스토리지에서 데이터 불러오기
-        let todos = JSON.parse(localStorage.getItem('todos')) ||;
+def process_automation_data(items):
+    """
+    수집된 데이터를 가공하여 결과를 반환하는 자동화 로직입니다.
+    """
+    processed = []
+    for item in items:
+        # 특정 조건에 따른 데이터 필터링 및 변환
+        if len(item['name']) > 5:
+            processed.append(item['name'].upper())
+    return processed
 
-        function renderTodos() {
-            todoList.innerHTML = '';
-            todos.forEach((todo, index) => {
-                const li = document.createElement('li');
-                if (todo.completed) li.classList.add('completed');
+# 실행 예시
+if __name__ == "__main__":
+    sample_data = [
+        {'id': 1, 'name': 'liner_ai_search'},
+        {'id': 2, 'name': 'test'}
+    ]
+    result = process_automation_data(sample_data)
+    print(f"가공된 결과: {result}")
 
-                li.innerHTML = `
-                    <span onclick="toggleTodo(${index})">${todo.text}</span>
-                    <button class="delete-btn" onclick="deleteTodo(${index})">삭제</button>
-                `;
-                todoList.appendChild(li);
-            });
-            localStorage.setItem('todos', JSON.stringify(todos));
-        }
-
-        function addTodo() {
-            if (input.value.trim() === '') return;
-            todos.push({ text: input.value, completed: false });
-            input.value = '';
-            renderTodos();
-        }
-
-        window.toggleTodo = (index) => {
-            todos.completed = !todos.completed;
-            renderTodos();
-        };
-
-        window.deleteTodo = (index) => {
-            todos.splice(index, 1);
-            renderTodos();
-        };
-
-        addBtn.addEventListener('click', addTodo);
-        input.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTodo(); });
-
-        renderTodos();
-    </script>
-</body>
-</html>
+export default UserDashboard;
